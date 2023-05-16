@@ -14,7 +14,18 @@ import "@chainlink/contracts/src/v0.8/AutomationCompatible.sol";
 error Lottery__NotEnoughETHEntered();
 error Lottery__TransferFailed();
 error Lottery__NotOpen();
-error Lottery__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 lotteryState);
+error Lottery__UpkeepNotNeeded(
+    uint256 currentBalance,
+    uint256 numPlayers,
+    uint256 lotteryState
+);
+
+/*
+ ? @title A sample Lottery Contract
+ ? @author Wajid
+ ? @notice this contract is for creating an untamperable decentralized smart contract
+ ? @dev this implements chainlink VRF v2 and chainlink keepers
+ */
 
 contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
     //*Type declarations
@@ -44,13 +55,14 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
     event RequestedLotteryWinner(uint256 indexed requestId);
     event WinnerPicked(address indexed winner);
 
+    //*Functions
     constructor(
         address vrfCoordinatorV2,
         uint256 entranceFee,
         bytes32 gasLane,
         uint64 subscriptionId,
         uint32 callbackGasLimit,
-        uint256 internal
+        uint256 interval
     ) VRFConsumerBaseV2(vrfCoordinatorV2) {
         i_entranceFee = entranceFee;
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinatorV2);
@@ -84,7 +96,7 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
      */
 
     function checkUpkeep(
-        bytes calldata /* checkData */
+        bytes memory /* checkData */
     )
         public
         override
@@ -100,7 +112,11 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
     function performUpkeep(bytes calldata /* performData */) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
-            revert Lottery__UpkeepNotNeeded(address(this).balance, s_players.length, uint256(s_lotteryState));
+            revert Lottery__UpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_lotteryState)
+            );
         }
 
         s_lotteryState = LotteryState.CALCULATING;
@@ -142,5 +158,25 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
 
     function getRecentWinner() public view returns (address) {
         return s_recentWinner;
+    }
+
+    function getLotteryState() public view returns (LotteryState) {
+        return s_lotteryState;
+    }
+
+    function getNumWords() public pure returns (uint56) {
+        return NUM_WORDS;
+    }
+
+    function getNumberOfPlayers() public view returns (uint256) {
+        return s_players.length;
+    }
+
+    function getLatestTimeStamp() public view returns (uint256) {
+        return s_lastTimeStamp;
+    }
+
+    function getRequestConfirmations() public pure returns (uint256) {
+        return REQUEST_CONFIRMATIONS;
     }
 }
