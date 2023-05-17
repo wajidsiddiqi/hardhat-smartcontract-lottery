@@ -1,5 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-contract-sizer");
+require("hardhat-deploy");
 require("dotenv").config();
 
 const SEPOLIA_RPC_URL =
