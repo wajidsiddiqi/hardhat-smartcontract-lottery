@@ -126,5 +126,19 @@ const { assert, expect } = require("chai");
             "Lottery__UpkeepNotNeeded"
           );
         });
+
+        it("updates the lottery state, emits an event and calls the vrfCoordinator", async () => {
+          await lottery.enterLottery({ value: lotteryEntranceFee });
+          await network.provider.send("evm_increaseTime", [
+            interval.toNumber() + 1,
+          ]);
+          await network.provider.send("evm_mine", []);
+          const txResponse = await lottery.performUpkeep([]);
+          const txReceipt = await txResponse.wait(1);
+          const requestId = await txReceipt.events[1].args.requestId;
+          const lotteryState = await lottery.getLotteryState();
+          assert(requestId.toNumber() > 0);
+          assert(lotteryState.toString() == "1");
+        });
       });
     });
